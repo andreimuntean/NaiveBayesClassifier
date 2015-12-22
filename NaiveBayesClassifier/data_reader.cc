@@ -1,56 +1,36 @@
 #include <fstream>
-#include <vector>
 #include <Windows.h>
+#include "boost/filesystem.hpp"
+#include "boost/foreach.hpp"
+#include "data_reader.h"
 
-using std::string;
-using std::vector;
-using std::wstring;
-
-// Reads the file from the specified path as a string.
-string read_file(const string path)
+// Reads the file from the specified path.
+std::string read_file(const std::string& path)
 {
-	std::ifstream file(path, std::ios::in || std::ios::binary);
+	std::ifstream input(path, std::ios::in | std::ios::binary | std::ios::ate);
+	auto file_size = input.tellg();
+	std::vector<char> bytes(file_size);
 
-	if (!file)
-	{
-		throw errno;
-	}
+	input.seekg(0, std::ios::beg);
+	input.read(&bytes[0], file_size);
 
-	string contents;
-
-	file.seekg(0, std::ios::end);
-	contents.resize(file.tellg());
-	file.seekg(0, std::ios::beg);
-	file.read(&contents[0], contents.size());
-	file.close();
-
-	return contents;
+	return std::string(&bytes[0], file_size);
 }
 
-// Lists the names of the files from the specified path. This only works for Windows.
-vector<string> get_file_names(const string path)
+// Gets the names of the files from the specified directory.
+std::vector<std::string> get_file_names(const std::string& path)
 {
-	vector<string> file_names;
-	WIN32_FIND_DATAA data;
-	HANDLE h_find = FindFirstFileA(path.c_str(), &data);
+	std::vector<std::string> file_names;
+	boost::filesystem::path directory_path(path);
+	boost::filesystem::directory_iterator directory_iterator(directory_path);
 
-	if (h_find != INVALID_HANDLE_VALUE)
+	for (const boost::filesystem::path& path : directory_iterator)
 	{
-		do
+		if (is_directory(path) || is_regular_file(path))
 		{
-			const string& file_name = data.cFileName;
-
-			if (file_name.compare(0, 1, ".") == 0)
-			{
-				continue;
-			}
-
-			file_names.push_back(file_name);
+			file_names.push_back(path.string());
 		}
-		while (FindNextFileA(h_find, &data));
 	}
-
-	FindClose(h_find);
 
 	return file_names;
 }

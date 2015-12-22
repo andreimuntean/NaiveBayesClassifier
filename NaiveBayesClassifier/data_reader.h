@@ -3,8 +3,5 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-
-string read_file(const string path);
-vector<string> get_file_names(const string directory);
+std::string read_file(const std::string& path);
+std::vector<std::string> get_file_names(const std::string& path);

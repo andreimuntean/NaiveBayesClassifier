@@ -1,33 +1,24 @@
 #pragma once
 
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
-
-using std::map;
-using std::string;
-using std::vector;
 
 class NaiveBayes
 {
 private:
-	vector<string> labels;
+	std::vector<std::string> labels;
 
 	// The prior probability of every class.
-	vector<int> priors;
-
-	// Stores every word encountered in the training set.
-	vector<string> vocabulary;
+	std::unordered_map<std::string, double> priors;
 
 	// Determines the likelihood of a word belonging to a class.
 	// Unknown words are represented by "?".
-	map<string, map<string, double>> likelihood;
+	std::unordered_map<std::string, std::unordered_map<std::string, double>> likelihood;
 
-	// Parses a string into a vector of words.
-	vector<string> to_words(string data);
+	// Parses a string into a vector of lowercase alphabetic words.
+	std::vector<std::string> to_words(std::string data);
 public:
-	NaiveBayes();
-	void train(vector<string> data, vector<string> labels);
-	string predict(string data);
-	virtual ~NaiveBayes();
+	void train(std::vector<std::string> data, std::vector<std::string> labels);
+	std::string predict(const std::string& data);
 };
