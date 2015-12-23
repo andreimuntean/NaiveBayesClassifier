@@ -14,10 +14,10 @@
     <ClCompile Include="naive_bayes.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="naive_bayes_tests.cc">
+    <ClCompile Include="data_reader.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="data_reader.cc">
+    <ClCompile Include="naive_bayes_tests.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

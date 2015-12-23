@@ -152,8 +152,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="data_reader.cc" />
-    <ClCompile Include="naive_bayes_tests.cc" />
     <ClCompile Include="naive_bayes.cc" />
+    <ClCompile Include="naive_bayes_tests.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

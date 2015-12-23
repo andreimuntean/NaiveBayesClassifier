@@ -22,7 +22,7 @@ std::vector<std::string> NaiveBayes::to_words(std::string data)
 		return character != ' ' && !isalnum(character);
 	}), data.end());
 
-	auto delimiter = " ";
+	const auto delimiter = " ";
 	size_t start = 0;
 	auto end = data.find(delimiter);
 
@@ -50,8 +50,8 @@ void NaiveBayes::train(std::vector<std::string> data, std::vector<std::string> l
 	// Calculates the frequency of words for every label.
 	for (auto index = 0; index < data.size(); ++index)
 	{
-		auto& label = labels[index];
-		auto& words = to_words(data[index]);
+		const auto& label = labels[index];
+		const auto& words = to_words(data[index]);
 
 		word_count[label] += words.size();
 
@@ -70,7 +70,7 @@ void NaiveBayes::train(std::vector<std::string> data, std::vector<std::string> l
 	{
 		// Due to Laplace smoothing, |vocabulary| is added to the nominator.
 		// An additional 1 is added as well to account for unknown values.
-		auto nominator = (double)word_count[label] + vocabulary.size() + 1;
+		const auto nominator = (double)word_count[label] + vocabulary.size() + 1;
 
 		for (const auto& word : vocabulary)
 		{
@@ -81,7 +81,7 @@ void NaiveBayes::train(std::vector<std::string> data, std::vector<std::string> l
 		likelihood["?"][label] = 1 / nominator;
 
 		// Turns the label frequencies into probabilities.
-		priors[label] /= (double) labels.size();
+		priors[label] /= (double)labels.size();
 	}
 }
 
@@ -93,8 +93,17 @@ std::string NaiveBayes::predict(const std::string& data)
 	{
 		for (const auto& label : labels)
 		{
+			// Magnifies the probabilities if they get too close to zero.
+			if (probabilities[label] < 1.0e-200)
+			{
+				for (auto& probability : probabilities)
+				{
+					probability.second *= 1.0e+100;
+				}
+			}
+
 			// Determines if this word is known.
-			if (likelihood.count(word) > 0)
+			if (likelihood.count(word))
 			{
 				probabilities[label] *= likelihood[word][label];
 			}
@@ -105,18 +114,9 @@ std::string NaiveBayes::predict(const std::string& data)
 		}
 	}
 
-	std::string prediction;
-	auto highest_probability = 0.0;
+	// Gets the label that has the highest probability.
+	const auto& prediction = std::max_element(probabilities.begin(), probabilities.end(),
+		[](const auto& x, const auto& y) { return x.second < y.second; });
 
-	// Determines the most likely label.
-	for (const auto& probability : probabilities)
-	{
-		if (probability.second > highest_probability)
-		{
-			highest_probability = probability.second;
-			prediction = probability.first;
-		}
-	}
-
-	return prediction;
+	return prediction->first;
 }

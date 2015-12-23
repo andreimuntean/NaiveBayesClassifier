@@ -34,3 +34,20 @@ std::vector<std::string> get_file_names(const std::string& path)
 
 	return file_names;
 }
+
+void get_data(const std::string path, std::vector<std::string>& data, std::vector<std::string>& labels)
+{
+	// Iterates through every class.
+	for (const auto& directory_path : get_file_names(path))
+	{
+		// Uses directory names as data labels.
+		auto label = directory_path.substr(path.length() + 1);
+
+		// Iterates through every data for this class.
+		for (const auto& file_path : get_file_names(directory_path))
+		{
+			data.push_back(read_file(file_path));
+			labels.push_back(label);
+		}
+	}
+}
