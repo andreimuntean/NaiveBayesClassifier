@@ -1,5 +1,4 @@
 #include <fstream>
-#include <Windows.h>
 #include "boost/filesystem.hpp"
 #include "boost/foreach.hpp"
 #include "data_reader.h"
@@ -33,6 +32,15 @@ std::vector<std::string> get_file_names(const std::string& path)
 	}
 
 	return file_names;
+}
+
+void get_data(const std::string path, std::vector<std::string>& data)
+{
+	// Iterates through every data.
+	for (const auto& file_path : get_file_names(path))
+	{
+		data.push_back(read_file(file_path));
+	}
 }
 
 void get_data(const std::string path, std::vector<std::string>& data, std::vector<std::string>& labels)

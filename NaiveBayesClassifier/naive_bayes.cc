@@ -1,13 +1,14 @@
 #include <algorithm>
 #include <cctype>
 #include <iterator>
+#include <numeric>
 #include <set>
 #include "naive_bayes.h"
 
+static const auto UNKNOWN_WORD = "?";
+
 std::vector<std::string> NaiveBayes::to_words(std::string data)
 {
-	std::vector<std::string> words;
-
 	// Turns every upper case letter into lower case.
 	std::transform(data.begin(), data.end(), data.begin(), ::tolower);
 	
@@ -22,6 +23,8 @@ std::vector<std::string> NaiveBayes::to_words(std::string data)
 		return character != ' ' && !isalnum(character);
 	}), data.end());
 
+	// Separates the string into words.
+	std::vector<std::string> words;
 	const auto delimiter = " ";
 	size_t start = 0;
 	auto end = data.find(delimiter);
@@ -78,14 +81,14 @@ void NaiveBayes::train(std::vector<std::string> data, std::vector<std::string> l
 		}
 
 		// Determines the likelihood of unknown values.
-		likelihood["?"][label] = 1 / nominator;
+		likelihood[UNKNOWN_WORD][label] = 1 / nominator;
 
 		// Turns the label frequencies into probabilities.
 		priors[label] /= (double)labels.size();
 	}
 }
 
-std::string NaiveBayes::predict(const std::string& data)
+std::unordered_map<std::string, double> NaiveBayes::estimate_probabilities(const std::string& data)
 {
 	auto probabilities = priors;
 
@@ -93,12 +96,16 @@ std::string NaiveBayes::predict(const std::string& data)
 	{
 		for (const auto& label : labels)
 		{
-			// Magnifies the probabilities if they get too close to zero.
-			if (probabilities[label] < 1.0e-200)
+			// Magnifies the values if they get too close to zero.
+			if (probabilities[label] < 1e-200)
 			{
 				for (auto& probability : probabilities)
 				{
-					probability.second *= 1.0e+100;
+					// Limits the values that get too close to infinity.
+					if (probability.second < 1e+200)
+					{
+						probability.second *= 1e+100;
+					}
 				}
 			}
 
@@ -109,10 +116,24 @@ std::string NaiveBayes::predict(const std::string& data)
 			}
 			else
 			{
-				probabilities[label] *= likelihood["?"][label];
+				probabilities[label] *= likelihood[UNKNOWN_WORD][label];
 			}
 		}
 	}
+
+	// Scales the probabilities so that their sum is 1.
+	const auto sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.0,
+		[](const auto sum, const auto& x) { return sum + x.second; });
+
+	std::for_each(probabilities.begin(), probabilities.end(),
+		[sum](auto& x) { x.second /= sum; });
+
+	return probabilities;
+}
+
+std::string NaiveBayes::predict(const std::string& data)
+{
+	const auto& probabilities = estimate_probabilities(data);
 
 	// Gets the label that has the highest probability.
 	const auto& prediction = std::max_element(probabilities.begin(), probabilities.end(),
